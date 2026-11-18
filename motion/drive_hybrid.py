@@ -85,11 +85,12 @@ def soft_start():
 
 LOST_PULSE = 3    # misses allowed in pulse mode
 LOST_CONT  = 15   # misses allowed in continuous mode
-NEAR_SIDE  = 65   # Z ≈ 5736/65 + 17.5 ≈ 106 cm → switch pulse → continuous
+NEAR_SIDE  = 50   # Z ≈ 5736/65 + 17.5 ≈ 106 cm → switch pulse → continuous
 FAR_SIDE   = 55   # Z ≈ 5736/55 + 17.5 ≈ 122 cm → switch continuous → pulse (hysteresis)
 mode = "pulse"
 seen = False      # seen the marker at least once (for search logic in week 3)
 lost = 0
+t_prev = None     # time of previous continuous iteration (for dt measurement)
 try:
     while True:
 
@@ -114,13 +115,19 @@ try:
                 print(f"[pulse] ARRIVED side={side:.0f}")
                 break
 
-            # TODO 2: if side >= NEAR_SIDE → switch to continuous
-
-            # OBSTACLE
+            # OBSTACLE (checked before ANY command that moves the motors)
             if obstacle_confirmed():
                 px.stop()
                 print("[pulse] obstacle - stopping")
                 break
+
+            ## pulse → continuous
+            if side >= NEAR_SIDE:
+                mode = "continuous"
+                lost = 0
+                print(f"[pulse] -> continuous side={side:.0f}")
+                soft_start()    # ramp up instead of jumping to SPEED (less camera rocking)
+                continue        # skip the PULSE block; next iteration enters the continuous branch
 
             # PULSE
             px.forward(SPEED)
@@ -129,9 +136,52 @@ try:
 
         ## CONTINUOUS MODE
         else:
-            pass   # TODOs 3-4
+            # loop time measurement 
+            now = time.monotonic()
+            dt_ms = (now - t_prev) * 1000 if t_prev is not None else 0.0
+            t_prev = now
+
+            #  robot is moving -> no SETTLE, no dropped frame
+            gray = cv2.cvtColor(cam.capture_array(), cv2.COLOR_BGR2GRAY)
+            m = find_marker(gray)
+
+            if m is None:
+                lost += 1
+                if lost >= LOST_CONT:
+                    px.stop()           
+                    mode = "pulse"
+                    lost = 0          
+                    t_prev = None
+                    print(f"[cont] lost {LOST_CONT} frames -> pulse")
+                continue               
+
+            lost = 0
+            cx, side = measure(m)
+            steer_towards(cx)
+            px.forward(SPEED)          
+            print(f"[cont] cx={cx:.0f} side={side:.0f} dt={dt_ms:.0f}ms")
+
+            # ARRIVED
+            if side >= STOP_SIDE:
+                px.stop()
+                print(f"[cont] ARRIVED side={side:.0f}")
+                break
+
+            # OBSTACLE: moving -> ONE reading is enough 
+            d = px.ultrasonic.read()
+            if 0 < d < OBSTACLE_CM:
+                px.stop()
+                print(f"[cont] obstacle d={d} - stopping")
+                break
+
+         
+            if side < FAR_SIDE:
+                px.stop()
+                mode = "pulse"
+                t_prev = None
+                print(f"[cont] -> pulse side={side:.0f}")
 
 finally:
-    px.stop()                   # motors off (also after Ctrl+C / exception)
-    px.set_dir_servo_angle(0)   # wheels straight
-    cam.stop()                  # release the camera
+    px.stop()                 
+    px.set_dir_servo_angle(0)   
+    cam.stop()                 
