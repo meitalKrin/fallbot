@@ -73,7 +73,7 @@ def look_stationary(): # robot must already be stopped: wait for settle, drop on
 def obstacle_confirmed(): ## run  2 times to chekc for an obstical  (the ultrasonic sometimes gives a “jumping” reading that isn’t real in the decomtion )
     hits = 0
     for _ in range(2):
-        d = px.ultrasonic.read()  # returns cm, or -1/-2 on timeout (never None)
+        d = px.ultrasonic.read() 
         hits += (0 < d < OBSTACLE_CM)
         time.sleep(0.02)
     return hits == 2
@@ -85,8 +85,8 @@ def soft_start():
 
 LOST_PULSE = 3    # misses allowed in pulse mode
 LOST_CONT  = 15   # misses allowed in continuous mode
-NEAR_SIDE  = 50   # Z ≈ 5736/65 + 17.5 ≈ 106 cm → switch pulse → continuous
-FAR_SIDE   = 55   # Z ≈ 5736/55 + 17.5 ≈ 122 cm → switch continuous → pulse (hysteresis)
+NEAR_SIDE  = 38   # Z ≈ 5736/65 + 17.5 ≈ 106 cm → switch pulse → continuous
+FAR_SIDE   = 30   # Z ≈ 5736/55 + 17.5 ≈ 122 cm → switch continuous → pulse (hysteresis)
 mode = "pulse"
 seen = False      # seen the marker at least once (for search logic in week 3)
 lost = 0
@@ -126,8 +126,8 @@ try:
                 mode = "continuous"
                 lost = 0
                 print(f"[pulse] -> continuous side={side:.0f}")
-                soft_start()    # ramp up instead of jumping to SPEED (less camera rocking)
-                continue        # skip the PULSE block; next iteration enters the continuous branch
+                soft_start()    
+                continue       
 
             # PULSE
             px.forward(SPEED)
