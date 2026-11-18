@@ -225,3 +225,8 @@ __marimo__/
 # project
 *.jpg
 .env
+
+#vision
+*.pt
+*_ncnn_model/
+.idea/
