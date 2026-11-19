@@ -8,9 +8,9 @@ from picarx import Picarx         # motors, steer
 ##constants
 ## DICT_4X4_50 4×4 bits the “dictionary” used to generate the markers.
 TARGET_ID = 0 ## for tests
-STOP_SIDE = 160 ##math with claude in the documntion
+STOP_SIDE = 160 
 MAX_STEER = 30 ##max angle from the the actual source code from the library of picar
-KP = 0.08##math with claude in the documntion
+KP = 0.08
 SPEED = 10 ## after defrent speed tests
 OBSTACLE_CM = 25 ## from the ultrasonic analysis
 PULSE = 0.4
@@ -56,7 +56,7 @@ def find_marker(gray): ## is there a marker?
 
 def measure(m):##where is it and how far?
     cx = m[:, 0].mean()
-    side = np.mean([np.linalg.norm(m[k] - m[(k + 1) % 4]) for k in range(4)]) ##vector between two adjacent corners. math with claude in the documntion
+    side = np.mean([np.linalg.norm(m[k] - m[(k + 1) % 4]) for k in range(4)]) ##mean size or  the side of the marker 
     return cx, side
 
 def steer_towards(cx):
@@ -85,8 +85,8 @@ def soft_start():
 
 LOST_PULSE = 3    # misses allowed in pulse mode
 LOST_CONT  = 15   # misses allowed in continuous mode
-NEAR_SIDE  = 38   # Z ≈ 5736/65 + 17.5 ≈ 106 cm → switch pulse → continuous
-FAR_SIDE   = 30   # Z ≈ 5736/55 + 17.5 ≈ 122 cm → switch continuous → pulse (hysteresis)
+NEAR_SIDE  = 38   # switch pulse → continuous
+FAR_SIDE   = 30   # switch continuous → pulse 
 mode = "pulse"
 seen = False      # seen the marker at least once (for search logic in week 3)
 lost = 0
