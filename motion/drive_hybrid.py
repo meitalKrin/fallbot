@@ -7,7 +7,7 @@ from picarx import Picarx         # motors, steer
 
 ##constants
 ## DICT_4X4_50 4×4 bits the “dictionary” used to generate the markers.
-STOP_SIDE = 160
+STOP_SIDE = 160 ## 53 cm from target
 TARGET_ID = 0   # marker for the standalone test (patrol will pass ROUTE[i])
 MAX_STEER = 30 ##max angle from the the actual source code from the library of picar
 KP = 0.08
@@ -83,8 +83,8 @@ def soft_start():
 
 LOST_PULSE = 3    # misses allowed in pulse mode
 LOST_CONT  = 15   # misses allowed in continuous mode
-NEAR_SIDE  = 38   # switch pulse → continuous
-FAR_SIDE   = 30   # switch continuous → pulse
+NEAR_SIDE  = 38   # switch pulse → continuous  approx 168 cm from target
+FAR_SIDE   = 30   # switch continuous → pulse approx 209 cm from target
 assert FAR_SIDE < NEAR_SIDE < STOP_SIDE, "thresholds out of order"
 
 def approach(target_id):
