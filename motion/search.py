@@ -65,7 +65,18 @@ def turn_in_place(target_id):
         pairs = max(1, round(abs(bearing) / DEG_PER_PAIR[side]))
         n_point_pairs(pairs, STEP_T, direction)
     return  "need_turn"
+HALF_TURN = 180    # deg: with the +-117 deg scan, two scans cover 360
 
+def search_360(target_id):
+    """Find the marker anywhere around: scan; if not found, turn ~180 deg and scan again.
+    Returns the same statuses as turn_in_place."""
+    turn = turn_in_place(target_id)
+    if turn != "not_found":
+        return turn
+    pairs = round(HALF_TURN / DEG_PER_PAIR["L"])     # 180/32 = 5.6 -> 6 pairs
+    print(f"[search] marker {target_id} not around - turning ~180 deg ({pairs} pairs left)")
+    n_point_pairs(pairs, STEP_T, -1)
+    return turn_in_place(target_id)
 
 if __name__ == "__main__":
     target = int(sys.argv[1]) if len(sys.argv) > 1 else 0

@@ -1,14 +1,14 @@
 import time
 from drive_hybrid import approach, px, cam, SPEED   # the import runs the hardware init once
 from search import turn_in_place
-
+from search import turn_in_place, search_360
 ROUTE = [0, 1, 2]           # marker ids in visiting order
 STATION_PAUSE = 2.0         # s to wait at each station (people scan goes here later)
 BACK_OFF_T = 1.0            # s reversing away from the marker before turning
 OBSTACLE_WAIT = 3.0         # s to wait before retrying after an obstacle
 MAX_OBSTACLE_TRIES = 3      # obstacles in a row on the same leg -> "stuck"
 MAX_LAPS = 2                # full laps of ROUTE before returning "done"
-
+MAX_LOST_TRIES = 2
 
 def back_off():
     """Reverse straight for BACK_OFF_T seconds, then stop."""
@@ -23,11 +23,12 @@ def patrol():
     i = 0
     laps = 0
     obstacle_tries = 0
+    lost_tries = 0
     while laps < MAX_LAPS:
         target = ROUTE[i]
         print(f"[patrol] -> marker {target}")
 
-        turn = turn_in_place(target)       # face the marker before driving
+        turn  = search_360(target)               # face the marker before driving
         if turn != "aligned":
             print(f"[patrol] could not face marker {target} ({turn}) - stopping")
             return "lost"
@@ -36,6 +37,7 @@ def patrol():
 
         if result == "arrived":
             obstacle_tries = 0
+            lost_tries = 0
             time.sleep(STATION_PAUSE)
             back_off()
             i = (i + 1) % len(ROUTE)       # next station (wraps 2 -> 0)
@@ -51,8 +53,12 @@ def patrol():
             time.sleep(OBSTACLE_WAIT)      # i unchanged -> retry the same marker
 
         else:  # "lost"
-            print(f"[patrol] lost marker {target} - stopping")
-            return "lost"
+            lost_tries += 1
+            if lost_tries >= MAX_LOST_TRIES:
+                print(f"[patrol] lost marker {target} {lost_tries} times - giving up")
+                return "lost"
+            print(f"[patrol] lost marker {target} - searching (try {lost_tries})")
+            # i unchanged -> loop top runs search_360 and retries the same marker
 
     return "done"
 
