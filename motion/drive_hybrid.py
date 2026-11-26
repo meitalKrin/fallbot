@@ -7,7 +7,7 @@ from picarx import Picarx         # motors, steer
 
 ##constants
 ## DICT_4X4_50 4×4 bits the “dictionary” used to generate the markers.
-STOP_SIDE =  100 ## 53 cm from target
+STOP_SIDE =  120 ## 53 cm from target
 TARGET_ID = 0   # marker for the standalone test (patrol will pass ROUTE[i])
 MAX_STEER = 30 ##max angle from the the actual source code from the library of picar
 KP = 0.08
