@@ -98,15 +98,18 @@ while True:
                 posture = "lying" if angle > LYING_ANGLE else "standing"
             else:
                 posture = "lying" if ratio > LYING_RATIO else "standing"
+            if posture == "lying":
+                cv2.rectangle(frame_out, (int(x1), int(y1)), (int(x2), int(y2)), (0, 0, 255), 3)
+                color = (0, 0, 255) if posture == "lying" else (0, 255, 0)
 
 
             angle_txt = f"{angle:.0f}" if angle is not None else "-"
             line1 = f"kps {good_kps}/17 ratio {ratio:.2f} angle {angle_txt} ({seg}) | {posture}"
             line2 = f"sh {shoulders:d} | hip {hips:d} | ankle {ankle:d} | knee {knee:d}"
             cv2.putText(frame_out,line1, (int(x1)+10, int(y1)+40),
-                        cv2.FONT_HERSHEY_SIMPLEX,0.6, (0,255,0), 2)
+                        cv2.FONT_HERSHEY_SIMPLEX,0.6, (color), 2)
             cv2.putText(frame_out,line2, (int(x1), int(y2) - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX,0.6, (0,255,0), 2)
+                        cv2.FONT_HERSHEY_SIMPLEX,0.6, (color), 2)
 
 
 
