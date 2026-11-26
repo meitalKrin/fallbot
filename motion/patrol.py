@@ -53,3 +53,14 @@ def patrol():
         else:  # "lost"
             print(f"[patrol] lost marker {target} - stopping")
             return "lost"
+
+    return "done"
+
+
+if __name__ == "__main__":
+    try:
+        print("patrol result:", patrol())
+    finally:
+        px.stop()
+        px.set_dir_servo_angle(0)
+        cam.stop()
