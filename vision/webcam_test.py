@@ -5,14 +5,14 @@ from ultralytics import YOLO
 MODEL_PATH = "yolo26n-pose.pt" # Ultralytics pose model, nano size( smallest/fastest)
 FRAME_WIDTH, FRAME_HEIGHT = 640, 480 #same as robot camera
 CAMERA_INDEX = 0
-KP_CONF_MIN = 0.3 # min confidence for a keypoint to be valid
+KP_CONF_MIN = 0.3 # min confidence for a keypoint to be, valid was 0.5
 #from COCO keypoint order
 L_SHOULDER, R_SHOULDER = 5,6
 L_HIP, R_HIP = 11,12 
 L_ANKLE, R_ANKLE = 15,16
 L_KNEE, R_KNEE = 13,14
-LYING_ANGLE = 45
-LYING_RATIO = 1.3
+LYING_ANGLE = 45 #design choice: halfway between vertical and horizontal
+LYING_RATIO = 1.3 #measured: legs-only 0.73, lying around 1.95-2.03
 
 def pair_visible(kps_conf, a, b):
     """True if both keypoints a and b are above KP_CONF_MIN"""
@@ -49,6 +49,11 @@ if not cap.isOpened(): #in case it doesnt detect any camera
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, FRAME_WIDTH)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
 
+#testing if rotating helps detect lying people
+ROTATIONS = [None, cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_90_COUNTERCLOCKWISE]
+ROTATION_NAMES = ["0","90","270"]
+rot_idx = 0
+
 
 while True:
     ok,frame = cap.read()
@@ -57,6 +62,9 @@ while True:
         break
     if frame.shape != (FRAME_HEIGHT, FRAME_WIDTH, 3):  # for testing if the camera brings a different shape
         print(f"Wrong frame shape: {frame.shape}")
+    if ROTATIONS[rot_idx] is not None:
+        frame = cv2.rotate(frame, ROTATIONS[rot_idx])
+
     result = model(frame,verbose=False)[0]
 
     frame_out = result.plot()
@@ -81,7 +89,7 @@ while True:
                 angle = segment_angle(kps_xy[i], L_HIP, R_HIP, L_KNEE, R_KNEE)
                 seg = "thigh"
             elif knee and ankle:
-                angle = segment_angle(kps_xy[i], L_KNEE, R_KNEE, L_HIP, R_HIP)
+                angle = segment_angle(kps_xy[i], L_KNEE, R_KNEE, L_ANKLE, R_ANKLE)
                 seg = "shin"
             else:
                 angle = None
@@ -102,10 +110,14 @@ while True:
 
 
 
-
+    cv2.putText(frame_out, f"rot {ROTATION_NAMES[rot_idx]}", (10,30),
+                cv2.FONT_HERSHEY_COMPLEX,0.6, (0,255,0), 2)
     cv2.imshow("webcam_test", frame_out)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    key = cv2.waitKey(1) &0xFF
+    if key == ord('q'):
         break
+    if key == ord('r'):
+        rot_idx = (rot_idx + 1) % len(ROTATIONS)
 
 
 
