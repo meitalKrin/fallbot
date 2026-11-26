@@ -26,6 +26,12 @@ def patrol():
     while laps < MAX_LAPS:
         target = ROUTE[i]
         print(f"[patrol] -> marker {target}")
+
+        turn = turn_in_place(target)       # face the marker before driving
+        if turn != "aligned":
+            print(f"[patrol] could not face marker {target} ({turn}) - stopping")
+            return "lost"
+
         result = approach(target)          # "arrived" / "lost" / "obstacle"
 
         if result == "arrived":
@@ -35,12 +41,6 @@ def patrol():
             i = (i + 1) % len(ROUTE)       # next station (wraps 2 -> 0)
             if i == 0:
                 laps += 1
-                if laps >= MAX_LAPS:       # finished: no need to turn toward the next one
-                    break
-            turn = turn_in_place(ROUTE[i]) # "aligned" / "not_found" / "need_turn"
-            if turn != "aligned":
-                print(f"[patrol] could not face marker {ROUTE[i]} ({turn}) - stopping")
-                return "lost"
 
         elif result == "obstacle":
             obstacle_tries += 1
