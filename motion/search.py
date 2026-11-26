@@ -58,15 +58,12 @@ def turn_in_place(target_id):
         if abs(bearing)  <= TURN_TOL:
             return "aligned"
         if bearing > 0:
-            temp = bearing
-            while temp > 0:
-                n_point_pairs(1, STEP_T, +1)
-                temp -= DEG_PER_PAIR["R"]
+            
+            side, direction = "R", +1
         else:
-            temp = bearing
-            while temp < 0:
-                n_point_pairs(1, STEP_T, -1)
-                temp += DEG_PER_PAIR["L"]
+           side, direction = "L", -1
+        pairs = max(1, round(abs(bearing) / DEG_PER_PAIR[side]))
+        n_point_pairs(pairs, STEP_T, direction)
     return  "need_turn"
 
 
